@@ -14,7 +14,6 @@ namespace Program
 
         public ClientInfo(string clientName)
         {
-            // Convert to title case.
             TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
             clientName = ti.ToTitleCase(clientName.ToLower());
             string[] words = clientName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -22,7 +21,6 @@ namespace Program
             this.Title = words.Length > 0 ? words[0] : "";
             this.FirstName = words.Length > 1 ? words[1] : "";
             this.LastName = words.Length > 2 ? words[words.Length - 1] : "";
-            // MiddleName: any words between first and last.
             if (words.Length > 2)
                 this.MiddleName = words.Length > 3 ? string.Join(" ", words.Skip(2).Take(words.Length - 3)) : "";
             else
@@ -32,19 +30,17 @@ namespace Program
 
     internal class Program
     {
-        // This method generates addressee and salutation strings based on a variable number of clients.
         static (string addressee, string salutation) GenerateAddressAndSalutation(ClientInfo[] clients, Dictionary<string, string> pluralTitles)
         {
             int count = clients.Length;
+            // if there are 2 clients
             if (count == 2)
             {
-                // Two-client scenario.
                 if (clients[0].LastName.Equals(clients[1].LastName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Same surname.
                     if (clients[0].Title.Equals(clients[1].Title, StringComparison.OrdinalIgnoreCase))
                     {
-                        // Same title → use the plural form.
+                        // if same title, use plural
                         string plural = pluralTitles[clients[0].Title];
                         string add = $"{plural} {clients[0].FirstName.Substring(0, 1)} & {clients[1].FirstName.Substring(0, 1)} {clients[0].LastName}";
                         string sal = $"{plural} {clients[0].LastName}";
@@ -52,8 +48,6 @@ namespace Program
                     }
                     else
                     {
-                        // Distinct titles but same surname (e.g. husband and wife).
-                        // Expected Example 1: "Mr & Mrs M & P Sargent"
                         string add = $"{clients[0].Title} & {clients[1].Title} {clients[0].FirstName.Substring(0, 1)} & {clients[1].FirstName.Substring(0, 1)} {clients[0].LastName}";
                         string sal = $"{clients[0].Title} and {clients[1].Title} {clients[0].LastName}";
                         return (add, sal);
@@ -61,7 +55,7 @@ namespace Program
                 }
                 else
                 {
-                    // Different surnames: list individually.
+                    // if different surnames, list both
                     string add = $"{clients[0].Title} {clients[0].FirstName.Substring(0, 1)} {clients[0].LastName} & {clients[1].Title} {clients[1].FirstName.Substring(0, 1)} {clients[1].LastName}";
                     string sal = $"{clients[0].Title} {clients[0].LastName} & {clients[1].Title} {clients[1].LastName},";
                     return (add, sal);
@@ -69,8 +63,8 @@ namespace Program
             }
             else if (count == 3)
             {
-                // Three-client scenario.
-                // First check if any two share a surname.
+                // when there are 3 clients
+                // check if two clients have same surname
                 var surnameGroups = clients.GroupBy(c => c.LastName).ToList();
                 if (surnameGroups.Any(g => g.Count() == 2))
                 {
@@ -81,7 +75,7 @@ namespace Program
 
                     if (groupedClients[0].Title.Equals(groupedClients[1].Title, StringComparison.OrdinalIgnoreCase))
                     {
-                        // Same title → use plural form for grouped pair.
+                        // if title is same use plural for grouped clients
                         string plural = pluralTitles[groupedClients[0].Title];
                         string add = $"{plural} {groupedClients[0].FirstName.Substring(0, 1)} & {groupedClients[1].FirstName.Substring(0, 1)} {commonSurname} & {remainingClient.Title} {remainingClient.FirstName.Substring(0, 1)} {remainingClient.LastName}";
                         string sal = $"{plural} {commonSurname} and {remainingClient.Title} {remainingClient.LastName},";
@@ -97,19 +91,18 @@ namespace Program
                 }
                 else
                 {
-                    // No two share a surname.
-                    // If all three share the same title, use plural.
+                    // if no common surname
+                    // if all have same surname, use plural
                     if (clients.Select(c => c.Title).Distinct().Count() == 1)
                     {
                         string plural = pluralTitles[clients[0].Title];
-                        // If all surnames are distinct, we'll list initials with commas.
                         string add = $"{plural} {clients[0].FirstName.Substring(0, 1)}, {clients[1].FirstName.Substring(0, 1)} & {clients[2].FirstName.Substring(0, 1)} {clients[0].LastName}";
                         string sal = $"{plural} {clients[0].LastName},";
                         return (add, sal);
                     }
                     else
                     {
-                        // List all individually.
+                        // if all surnames are different, list all
                         string add = $"{clients[0].Title} {clients[0].FirstName.Substring(0, 1)} {clients[0].LastName}, {clients[1].Title} {clients[1].FirstName.Substring(0, 1)} {clients[1].LastName} & {clients[2].Title} {clients[2].FirstName.Substring(0, 1)} {clients[2].LastName}";
                         string sal = $"{clients[0].Title} {clients[0].LastName}, {clients[1].Title} {clients[1].LastName} & {clients[2].Title} {clients[2].LastName},";
                         return (add, sal);
